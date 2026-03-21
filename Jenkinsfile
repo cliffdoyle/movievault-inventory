@@ -19,15 +19,18 @@ pipeline {
         }
 
         stage('Unit Tests') {
-            steps {
-                sh '''
-                    export PATH=$PATH:/usr/local/go/bin
-                    export HOME=/root
-                    go mod tidy
-                    go test ./... -v 2>&1 || echo "No tests found — continuing"
-                '''
-            }
-        }
+    steps {
+        sh '''
+            export PATH=$PATH:/usr/local/go/bin
+            export HOME=/tmp
+            export GOPATH=/tmp/gopath
+            export GOCACHE=/tmp/gocache
+            mkdir -p /tmp/gopath /tmp/gocache
+            go mod tidy
+            go test ./... -v 2>&1 || echo "No tests yet — continuing"
+        '''
+    }
+}
 
         stage('SonarQube Analysis') {
             steps {
