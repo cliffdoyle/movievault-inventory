@@ -32,20 +32,23 @@ pipeline {
     }
 }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        export PATH=$PATH:/usr/local/go/bin
-                        sonar-scanner \
-                          -Dsonar.projectKey=movievault-inventory \
-                          -Dsonar.projectName=movievault-inventory \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=${SONAR_URL}
-                    '''
-                }
-            }
+       stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+                export PATH=$PATH:/usr/local/go/bin:/opt/sonar-scanner/bin
+                export HOME=/tmp
+                export GOPATH=/tmp/gopath
+                export GOCACHE=/tmp/gocache
+                sonar-scanner \
+                  -Dsonar.projectKey=movievault-inventory \
+                  -Dsonar.projectName=movievault-inventory \
+                  -Dsonar.sources=. \
+                  -Dsonar.host.url=http://3.237.177.157:9000
+            '''
         }
+    }
+}
 
         stage('Quality Gate') {
             steps {
