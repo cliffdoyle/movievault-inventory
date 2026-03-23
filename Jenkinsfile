@@ -18,18 +18,23 @@ pipeline {
             }
         }
 
-   stage('Unit Tests') {
-    steps {
-        sh '''
-            export PATH=/usr/local/go/bin:$PATH
-            export HOME=/tmp
-            export GOPATH=/tmp/gopath
-            export GOCACHE=/tmp/gocache
-            mkdir -p /tmp/gopath /tmp/gocache
-            go mod tidy
-            go test ./... -v -coverprofile=coverage.out
-        '''
-    }
+    stage('Unit Tests') {
+     steps {
+         sh '''
+             export GOROOT=/usr/local/go
+             export PATH=$GOROOT/bin:$PATH
+             export HOME=/tmp
+             export GOPATH=/tmp/gopath
+             export GOCACHE=/tmp/gocache
+             mkdir -p /tmp/gopath /tmp/gocache
+             
+             go version
+             go env GOROOT GOTOOLDIR
+             
+             go mod tidy
+             go test ./... -v -coverprofile=coverage.out
+         '''
+     }
     post {
         always {
             archiveArtifacts artifacts: 'coverage.out',
@@ -41,7 +46,8 @@ pipeline {
     steps {
         withSonarQubeEnv('sonarqube') {
             sh '''
-                export PATH=/usr/local/go/bin:/opt/sonar-scanner/bin:$PATH
+                export GOROOT=/usr/local/go
+                export PATH=$GOROOT/bin:/opt/sonar-scanner/bin:$PATH
                 export HOME=/tmp
                 export GOPATH=/tmp/gopath
                 export GOCACHE=/tmp/gocache
