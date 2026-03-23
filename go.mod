@@ -3,6 +3,7 @@ module github.com/cliffdoyle/eks-golang
 go 1.25.0
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/IBM/sarama v1.47.0
 	github.com/lib/pq v1.11.2
 )
