@@ -21,7 +21,7 @@ pipeline {
    stage('Unit Tests') {
     steps {
         sh '''
-            export PATH=$PATH:/usr/local/go/bin
+            export PATH=/usr/local/go/bin:$PATH
             export HOME=/tmp
             export GOPATH=/tmp/gopath
             export GOCACHE=/tmp/gocache
@@ -41,7 +41,7 @@ pipeline {
     steps {
         withSonarQubeEnv('sonarqube') {
             sh '''
-                export PATH=$PATH:/usr/local/go/bin:/opt/sonar-scanner/bin
+                export PATH=/usr/local/go/bin:/opt/sonar-scanner/bin:$PATH
                 export HOME=/tmp
                 export GOPATH=/tmp/gopath
                 export GOCACHE=/tmp/gocache
