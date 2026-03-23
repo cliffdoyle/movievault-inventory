@@ -163,3 +163,164 @@ func TestHandleMovie_Delete(t *testing.T) {
 		t.Errorf("expected 204, got %d", rr.Code)
 	}
 }
+
+func TestHandleMovies_Get_Error(t *testing.T) {
+	svc := &mockMovieService{returnErr: errors.New("db error")}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodGet, "/movies", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovies(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovies_Post_BadJSON(t *testing.T) {
+	svc := &mockMovieService{}
+	h := NewMovieHandler(svc)
+
+	body := []byte(`{"title": "The Matrix", "year": "NINETEEN}`) // invalid json
+	req, _ := http.NewRequest(http.MethodPost, "/movies", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+	h.HandleMovies(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovies_Post_Error(t *testing.T) {
+	svc := &mockMovieService{returnErr: errors.New("db error")}
+	h := NewMovieHandler(svc)
+
+	body := []byte(`{"title":"The Matrix","genre":"Sci-Fi","year":1999,"stock":10}`)
+	req, _ := http.NewRequest(http.MethodPost, "/movies", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+	h.HandleMovies(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovies_BadMethod(t *testing.T) {
+	svc := &mockMovieService{}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodPatch, "/movies", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovies(rr, req)
+
+	if rr.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_InvalidID(t *testing.T) {
+	svc := &mockMovieService{}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodGet, "/movies/abc", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Get_InternalError(t *testing.T) {
+	svc := &mockMovieService{returnErr: errors.New("db error")}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodGet, "/movies/1", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Put_BadJSON(t *testing.T) {
+	svc := &mockMovieService{}
+	h := NewMovieHandler(svc)
+
+	body := []byte(`{"stock": "fifteen"}`) // invalid json
+	req, _ := http.NewRequest(http.MethodPut, "/movies/1", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Put_NotFound(t *testing.T) {
+	svc := &mockMovieService{returnErr: sql.ErrNoRows}
+	h := NewMovieHandler(svc)
+
+	body := []byte(`{"stock": 15}`)
+	req, _ := http.NewRequest(http.MethodPut, "/movies/1", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Put_Error(t *testing.T) {
+	svc := &mockMovieService{returnErr: errors.New("db error")}
+	h := NewMovieHandler(svc)
+
+	body := []byte(`{"stock": 15}`)
+	req, _ := http.NewRequest(http.MethodPut, "/movies/1", bytes.NewBuffer(body))
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Delete_NotFound(t *testing.T) {
+	svc := &mockMovieService{returnErr: sql.ErrNoRows}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodDelete, "/movies/1", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_Delete_Error(t *testing.T) {
+	svc := &mockMovieService{returnErr: errors.New("db error")}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodDelete, "/movies/1", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rr.Code)
+	}
+}
+
+func TestHandleMovie_BadMethod(t *testing.T) {
+	svc := &mockMovieService{}
+	h := NewMovieHandler(svc)
+
+	req, _ := http.NewRequest(http.MethodPatch, "/movies/1", nil)
+	rr := httptest.NewRecorder()
+	h.HandleMovie(rr, req)
+
+	if rr.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", rr.Code)
+	}
+}

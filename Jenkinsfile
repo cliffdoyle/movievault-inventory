@@ -18,7 +18,7 @@ pipeline {
             }
         }
 
-        stage('Unit Tests') {
+   stage('Unit Tests') {
     steps {
         sh '''
             export PATH=$PATH:/usr/local/go/bin
@@ -27,12 +27,17 @@ pipeline {
             export GOCACHE=/tmp/gocache
             mkdir -p /tmp/gopath /tmp/gocache
             go mod tidy
-            go test ./... -v 2>&1 || echo "No tests yet — continuing"
+            go test ./... -v -coverprofile=coverage.out
         '''
     }
+    post {
+        always {
+            archiveArtifacts artifacts: 'coverage.out',
+                             allowEmptyArchive: true
+        }
+    }
 }
-
-       stage('SonarQube Analysis') {
+      stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('sonarqube') {
             sh '''
@@ -44,6 +49,7 @@ pipeline {
                   -Dsonar.projectKey=movievault-inventory \
                   -Dsonar.projectName=movievault-inventory \
                   -Dsonar.sources=. \
+                  -Dsonar.go.coverage.reportPaths=coverage.out \
                   -Dsonar.host.url=http://3.237.177.157:9000
             '''
         }

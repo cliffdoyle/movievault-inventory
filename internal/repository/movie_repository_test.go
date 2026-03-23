@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"regexp"
 	"testing"
 
@@ -170,5 +171,45 @@ func TestMovieRepository_Ping(t *testing.T) {
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("unfulfilled expectations: %s", err)
+	}
+}
+
+func TestMovieRepository_GetMovies_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create sqlmock: %v", err)
+	}
+	defer db.Close()
+
+	repo := &movieRepository{db: db}
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, title, genre, year, stock FROM movies ORDER BY id")).
+		WillReturnError(sql.ErrConnDone)
+
+	movies, err := repo.GetMovies()
+	if err == nil {
+		t.Errorf("expected error, got nil")
+	}
+	if movies != nil {
+		t.Errorf("expected nil movies, got %v", movies)
+	}
+}
+
+func TestMovieRepository_GetMovieByID_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create sqlmock: %v", err)
+	}
+	defer db.Close()
+
+	repo := &movieRepository{db: db}
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, title, genre, year, stock FROM movies WHERE id=$1")).
+		WithArgs(1).
+		WillReturnError(sql.ErrNoRows)
+
+	_, err = repo.GetMovieByID(1)
+	if err != sql.ErrNoRows {
+		t.Errorf("expected sql.ErrNoRows, got %v", err)
 	}
 }

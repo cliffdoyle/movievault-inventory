@@ -185,3 +185,56 @@ func TestMovieService_CreateMovie_PropagatesError(t *testing.T) {
 		t.Fatalf("expected error, got nil")
 	}
 }
+
+func TestMovieService_UpdateStock_Error(t *testing.T) {
+	repo := &mockMovieRepository{
+		returnErr: errors.New("db error"),
+	}
+	
+	// Producer should not be used
+	svc := &movieService{
+		repo: repo,
+	}
+
+	_, err := svc.UpdateStock(1, 15)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestMovieService_DeleteMovie_Error(t *testing.T) {
+	repo := &mockMovieRepository{
+		returnErr: errors.New("db error"),
+	}
+	
+	// Producer should not be used
+	svc := &movieService{
+		repo: repo,
+	}
+
+	_, err := svc.DeleteMovie(1)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestMovieService_KafkaPublish_Error(t *testing.T) {
+	repo := &mockMovieRepository{}
+	
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
+	producer := mocks.NewSyncProducer(t, config)
+	producer.ExpectSendMessageAndFail(errors.New("kafka is down"))
+
+	svc := &movieService{
+		repo:     repo,
+		producer: producer,
+	}
+
+	err := svc.CreateMovie(&models.Movie{Title: "The Matrix"})
+	// CreateMovie succeeds because DB succeeded, publishEvent logs the failure but doesn't return err.
+	if err != nil {
+		t.Fatalf("expected no error from repo, got %v", err)
+	}
+}
