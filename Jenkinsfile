@@ -31,6 +31,9 @@ pipeline {
              go version
              go env GOROOT GOTOOLDIR
              
+             export GOTOOLCHAIN=local
+             go mod edit -go=1.22.0
+             
              go mod tidy
              go test ./... -v -coverprofile=coverage.out
          '''
